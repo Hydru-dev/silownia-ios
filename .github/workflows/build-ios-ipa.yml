@@ -33,7 +33,7 @@ jobs:
         working-directory: ios
         run: |
           WORKSPACE=$(ls -d *.xcworkspace | head -n 1)
-          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list -json | python3 -c "import sys, json; data=json.load(sys.stdin); schemes=[s for s in data['workspace']['schemes'] if not s.startswith('Pods')]; print(schemes[0])")
+          SCHEME="${WORKSPACE%.xcworkspace}"
           echo "Building Workspace=$WORKSPACE Scheme=$SCHEME"
           xcodebuild \
             -workspace "$WORKSPACE" \
