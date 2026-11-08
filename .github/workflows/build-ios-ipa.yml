@@ -1,0 +1,65 @@
+name: Build iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build-ipa:
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Generate native iOS project (Expo Prebuild)
+        env:
+          CI: "1"
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: Install CocoaPods
+        working-directory: ios
+        run: pod install
+
+      - name: Build iOS .app (Release, unsigned)
+        working-directory: ios
+        run: |
+          WORKSPACE=$(ls -d *.xcworkspace | head -n 1)
+          SCHEME=$(xcodebuild -workspace "$WORKSPACE" -list -json | python3 -c "import sys, json; data=json.load(sys.stdin); schemes=[s for s in data['workspace']['schemes'] if not s.startswith('Pods')]; print(schemes[0])")
+          echo "Building Workspace=$WORKSPACE Scheme=$SCHEME"
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            build
+
+      - name: Package .app into Silownia.ipa
+        working-directory: ios
+        run: |
+          mkdir -p Payload
+          APP_PATH=$(find build/Build/Products/Release-iphoneos -maxdepth 1 -name "*.app" | head -n 1)
+          echo "Found app at: $APP_PATH"
+          cp -R "$APP_PATH" Payload/
+          zip -qry ../Silownia.ipa Payload
+          ls -lh ../Silownia.ipa
+
+      - name: Upload Silownia.ipa artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Silownia-iOS-IPA
+          path: Silownia.ipa

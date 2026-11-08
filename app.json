@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Silownia",
+    "slug": "silownia",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.example.silownia",
+      "infoPlist": {
+        "CFBundleDisplayName": "Siłownia",
+        "NSMotionUsageDescription": "Aplikacja używa czujnika ruchu do zliczania kroków."
+      }
+    },
+    "android": {
+      "package": "com.example.silownia",
+      "permissions": [
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.VIBRATE"
+      ]
+    }
+  }
+}
